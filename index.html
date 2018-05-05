@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="EN-US">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- Latest compiled and minified CSS -->
+
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</head>
+<script src="assets/twilio.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<style>
+    html,
+    #viewDiv {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background-image: url('Bike_background.png');
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-position: center;
+        background-color: darkslategray;
+        color: #ffffff;
+    }
+
+    /* #content {} */
+
+    /*
+            Splash screen animation credits all go to @ihatetomatoes:
+            https://ihatetomatoes.net/create-custom-preloading-screen/
+        */
+
+    #loader-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        background-color: darkslategray;
+        opacity: 1.0;
+        transition: opacity 2s ease;
+    }
+
+    #loader {
+        display: block;
+        position: relative;
+        left: 50%;
+        top: 50%;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border-radius: 50%;
+        border: 3px solid transparent;
+        border-top-color: #32CD32;
+        -webkit-animation: spin 2s linear infinite;
+        /* Chrome, Opera 15+, Safari 5+ */
+        animation: spin 2s linear infinite;
+        /* Chrome, Firefox 16+, IE 10+, Opera */
+    }
+
+    #loader:before {
+        content: "";
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+        border-radius: 50%;
+        border: 3px solid transparent;
+        border-top-color: #e74c3c;
+        -webkit-animation: spin 3s linear infinite;
+        /* Chrome, Opera 15+, Safari 5+ */
+        animation: spin 3s linear infinite;
+        /* Chrome, Firefox 16+, IE 10+, Opera */
+    }
+
+    #loader:after {
+        content: "";
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        right: 15px;
+        bottom: 15px;
+        border-radius: 50%;
+        border: 3px solid transparent;
+        border-top-color: #f9c922;
+        -webkit-animation: spin 1.5s linear infinite;
+        /* Chrome, Opera 15+, Safari 5+ */
+        animation: spin 1.5s linear infinite;
+        /* Chrome, Firefox 16+, IE 10+, Opera */
+    }
+
+    .loaded #loader {
+        opacity: 0;
+        -webkit-transition: all 4s ease-out;
+        transition: all 4s ease-out;
+    }
+
+    .loaded #loader-wrapper {
+        -webkit-transition: all 4s 4s ease-out;
+        transition: all 4s 4s ease-out;
+    }
+
+    .loaded #loader-wrapper {
+        -webkit-transform: translateY(-100%);
+        -ms-transform: translateY(-100%);
+        transform: translateY(-100%);
+
+        -webkit-transition: all 0.1s 1.6s ease-out;
+        transition: all 0.1s 1.6s ease-out;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+            /* Chrome, Opera 15+, Safari 3.1+ */
+            -ms-transform: rotate(0deg);
+            /* IE 9 */
+            transform: rotate(0deg);
+            /* Firefox 16+, IE 10+, Opera */
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+            /* Chrome, Opera 15+, Safari 3.1+ */
+            -ms-transform: rotate(360deg);
+            /* IE 9 */
+            transform: rotate(360deg);
+            /* Firefox 16+, IE 10+, Opera */
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+            /* Chrome, Opera 15+, Safari 3.1+ */
+            -ms-transform: rotate(0deg);
+            /* IE 9 */
+            transform: rotate(0deg);
+            /* Firefox 16+, IE 10+, Opera */
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+            /* Chrome, Opera 15+, Safari 3.1+ */
+            -ms-transform: rotate(360deg);
+            /* IE 9 */
+            transform: rotate(360deg);
+            /* Firefox 16+, IE 10+, Opera */
+        }
+    }
+
+    /* Always set the map height explicitly to define the size of the div
+             * element that contains the map. */
+
+    #map {
+        height: 100%;
+    }
+
+    /* Optional: Makes the sample page fill the window. */
+
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    #map {
+        margin: 30px auto;
+        height: 60%;
+        width: 70%;
+    }
+
+    #LocationSearch {
+        clear: both;
+        margin: auto;
+        width: 50%;
+        border: 4px solid #f9c922;
+        padding: 10px;
+        text-align: center;
+    }
+
+    #continue-button {
+        position: absolute;
+        margin: 0 auto;
+        margin-top: 10px;
+        margin-left: 570px;
+        width: 200px;
+
+    }
+
+    #map {
+
+        padding: 10px;
+        box-shadow: 5px 15px 30px black;
+    }
+
+    #location-input {
+        width: 60%;
+        color: black;
+    }
+
+    #add-location {
+        align: center;
+    }
+
+    #condition-input {
+        color: black;
+        width: 100%;
+        height: 200px;
+    }
+
+    #conditionOfBike {
+
+
+        color: black;
+    }
+
+    #exampleModalLongTitle {
+        color: Black;
+    }
+
+    #title_img {
+        width: 8%;
+    }
+</style>
+</head>
+
+<div id="loader-wrapper">
+    <div id="loader"></div>
+    <div class="loader-section section-left"></div>
+    <div class="loader-section section-right"></div>
+</div>
+
+<div id="content">
+    <center>
+
+
+    </center>
+    <center>
+        <img id="title_img" src="assets/bsbanner.png">
+        <p>A bike share compliance reporting website specifically designed for Charlotte, NC</p>
+
+    </center>
+</div>
+
+<div id="map"></div>
+
+<form id="LocationSearch">
+    <input type="text" id="location-input" placeholder="Intersection of Trade Street and Tryon Street">
+    <!-- Button triggers new input to be added -->
+    <input type="submit" id="add-location" class="btn btn-primary" value="Search for Location">
+</form>
+
+<button type="button" id="continue-button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">
+    Continue
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-3 ml-auto">
+
+                                <button class=" company btn w3-yellow">Ofo</button>
+                            </div>
+                            <div class="col-md-3 ml-auto">
+                                <button type="button" class="company btn btn-success">LimeBike</button>
+                            </div>
+                            <div class="col-md-3 ml-auto">
+                                <button type="button" class="company btn btn-warning">Spin</button>
+                            </div>
+                            <div class="col-md-3 ml-auto">
+                                <button class="company btn btn-danger">Mobike</button>
+
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-md-12 ml-auto" id="conditionOfBike">Would you like to add any addition information about the condition of this bike?</div>
+                            <form id="bike-condition">
+                                <input type="text" id="condition-input" placeholder="Please type condition of the bike here...">
+                                <type="submit" value="Submit">
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+
+            <button type="button" input id="add-condition" class="btn btn-primary" data-dismiss="modal">Submit</button>
+
+
+        </div>
+    </div>
+</div>
+</div>
+
+
+
+
+
+<script>
+    $(document).ready(function () {
+
+
+                $('body').toggleClass('loaded');
+                $("#continue-button").hide();
+                var map;
+                var latlng = {
+                    lat: 0,
+                    lng: 0,
+                    type: "Address",
+                    address: 0,
+                    comments: 0,
+                    company: 0,
+                };
+
+
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: {
+                        lat: 35.227311,
+                        lng: -80.843063
+                    },
+                    zoom: 8
+                });
+
+                google.maps.event.addListener(map, 'click', function (event) {
+                    clearOverlays();
+                    placeMarker(event.latLng);
+
+                    smoothZoom(map, 12, map.getZoom());
+                    latlng.lat = event.latLng.lat()
+                    latlng.lng = event.latLng.lng()
+                    latlng.type = "Coords"
+                    console.log(latlng.lat)
+                    console.log(latlng.lng)
+                    showContinue()
+
+                });
+
+                function showContinue() {
+                    $("#continue-button").show();
+                }
+
+                function smoothZoom(map, max, cnt) {
+                    if (cnt >= max) {
+                        return;
+                    } else {
+                        z = google.maps.event.addListener(map, 'zoom_changed', function (event) {
+                            google.maps.event.removeListener(z);
+                            smoothZoom(map, max, cnt + .1);
+                        });
+                        setTimeout(function () {
+                            map.setZoom(cnt)
+                        }, 30);
+                    }
+
+                }
+
+                var markersArray = [];
+
+
+                function clearOverlays() {
+                    for (var i = 0; i < markersArray.length; i++) {
+                        markersArray[i].setMap(null);
+                    }
+                    markersArray.length = 0;
+                }
+
+
+
+                function placeMarker(location) {
+
+                    var marker = new google.maps.Marker({
+                        position: location,
+                        map: map
+                    });
+                    markersArray.push(marker)
+
+                    map.panTo(location);
+                }
+
+
+                $("#add-location").on("click", function (event) {
+                    event.preventDefault();
+                    var address = $("#location-input").val().trim();
+
+                    // Here we construct our URL
+                    var queryURL = "https://maps.googleapis.com/maps/api/geocode/json?address=" + address +
+                        "&key=AIzaSyB8HwQtM9WLoXW7-UrQLJtVXE4fhAdjrjA";
+                    clearOverlays();
+
+
+                    $.ajax({
+                        url: queryURL,
+                        method: "GET"
+                    }).then(function (response) {
+
+                        console.log(response)
+
+                        $("#continue-button").show();
+
+                        console.log($("#location-input").val().trim());
+                        smoothZoom(map, 20, map.getZoom());
+                        map.panTo(response.results[0].geometry.location)
+
+                        var marker = new google.maps.Marker({
+
+                            position: response.results[0].geometry.location,
+                            map: map,
+
+                            title: 'Bike Found!'
+                        });
+                        latlng.lat = response.results[0].geometry.location.lat
+                        latlng.lng = response.results[0].geometry.location.lng
+                        latlng.type = "Address"
+                        latlng.address = ($("#location-input").val().trim())
+                        console.log(latlng.lat)
+                        console.log(latlng.lng)
+                        console.log(response.results[0].geometry.location)
+
+                        markersArray.push(marker)
+
+
+
+                        /*  var confirmbtn = $("<input>");
+                          confirmbtn.addClass("btn")
+                          confirmbtn.addClass("btn-primary")
+                          confirmbtn.attr("id", "confirm-location");
+                          confirmbtn.attr("type", "input");
+                          confirmbtn.attr("value", "Confirm location and continue");
+                          confirmbtn.attr("data-toggle", "modal")
+                          confirmbtn.attr("data-target", "#exampleModalCenter")
+                          $("#LocationSearch").append(confirmbtn);
+                        */
+                    })
+
+
+                });
+
+
+                //ADD ZOOM LIMITER LATER
+                $("body").on("click", "#continue-button", function (event) {
+                        event.preventDefault();
+                        /*
+                          ----------------------------------------------------------
+                        var addressValidator = require('address-validator');
+                        var Address = addressValidator.Address;
+                        var _ = require('underscore');
+                         
+                        //any of the props in this object are optional, also spelling does not have to be exact.
+                        var address = new Address({
+                            street: '100 North Washington St',
+                            city: 'Bostont',
+                            state: 'Mass',
+                            country: 'US'
+                        });
+                         
+                        //the passed in address does not need to be an address object it can be a string. (address objects will give you a better likelihood of finding an exact match)
+                        address = '100 North Washington St, Boston, MA, US';
+                         
+                        //`addressValidator.match.streetAddress` -> tells the validator that you think the input should be a street address. This data makes the validator more accurate. 
+                        // But, sometimes you dont know.. in that cause you should use `addressValidator.match.unknown`
+                        addressValidator.validate(address, addressValidator.match.streetAddress, function(err, exact, inexact){
+                            console.log('input: ', address.toString())
+                            console.log('match: ', _.map(exact, function(a) {
+                              return a.toString();
+                            }));
+                            console.log('did you mean: ', _.map(inexact, function(a) {
+                              return a.toString();
+                            }));
+                         
+                            //access some props on the exact match
+                            var first = exact[0];
+                            console.log(first.streetNumber + ' '+ first.street);
+                        });         
+
+
+
+
+                                    --------------------------------------------------
+                        if(valid_address === true){
+
+                        */
+
+
+                        console.log("hi")
+                        if (latlng.type === "Address") {
+                            $("#exampleModalLongTitle").text($("#location-input").val().trim())
+                            console.log("address")
+                        } else if (latlng.type === "Coords") {
+                            $("#exampleModalLongTitle").text(latlng.lat + " " + " " + latlng.lng)
+                            console.log("coords")
+                        }
+                        console.log("hi")
+
+                    });
+
+                
+
+            $("body").on("click", ".company", function (event) {
+                event.preventDefault();
+
+                latlng.company = $(this).text()
+
+
+            }); 
+            
+            $(".modal").on("click", "#add-condition", function (event) {
+                latlng.comments = $("#condition-input").val().trim()
+
+                console.log(latlng.comments)
+                var message_string;
+                console.log(message_string)
+
+
+                if (latlng.type === "Address") {
+                    message_string = "Company Name: " + latlng.company + "\n" + "Bike Location: " + latlng.address +
+                        "\n" + "Comments: " + latlng.comments;
+
+                    $.ajax({
+                        method: "GET",
+                        url: "http://localhost:3000",
+                        data: {
+                            address: message_string
+                        }
+                    }).done();
+                }
+
+                if (latlng.type === "Coords") {
+
+                    var message_string = "Company Name: " + latlng.company + "\n" + "Bike location Pinned at: " +
+                        "(" + "Lat: " + latlng.lat.toFixed(4) + " Lng: " + latlng.lng.toFixed(4) + ")" + "\n" +
+                        "Comments: " + latlng.comments;
+
+                    $.ajax({
+                        method: "GET",
+                        url: "http://localhost:3000",
+                        data: {
+
+                            address: message_string
+                        }
+                    }).done();
+                }
+
+
+            });
+
+        });
+
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCW3acitxf9tvobjzQP5apcmRTEKNcnLkU&callback=initMap" async
+    defer></script>
+
+
+</body>
+
+
+
+
+
+
+
+
+
+
+</html>

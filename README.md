@@ -1,2 +1,1 @@
-# bsAware
-final group project
+# bsaware-master
